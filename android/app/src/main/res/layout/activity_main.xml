@@ -50,13 +50,31 @@
             android:gravity="center"
             android:paddingTop="14dp" />
 
+        <TextView
+            android:id="@+id/errorHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#9aa7bd"
+            android:textSize="13sp"
+            android:gravity="center"
+            android:paddingTop="8dp" />
+
         <Button
             android:id="@+id/retry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="আবার চেষ্টা করুন"
+            android:text="@string/retry"
             android:layout_marginTop="22dp"
             android:backgroundTint="#6d8cff"
             android:textColor="#ffffff" />
+
+        <Button
+            android:id="@+id/openBrowser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/open_browser"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="#222a3a"
+            android:textColor="#eef2f9" />
     </LinearLayout>
 </LinearLayout>

@@ -1,10 +1,13 @@
 package eu.org.vidsave.app;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,21 +18,24 @@ import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
-import android.app.Activity;
 
 public class MainActivity extends Activity {
 
     private WebView web;
     private ProgressBar progress;
     private View errorBox;
+    private TextView errorHint;
     private ValueCallback<Uri[]> filePathCallback;
+    private boolean triedFallback = false;
     private static final int FILE_CHOOSER = 1001;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -41,7 +47,9 @@ public class MainActivity extends Activity {
         web = findViewById(R.id.web);
         progress = findViewById(R.id.progress);
         errorBox = findViewById(R.id.errorBox);
+        errorHint = findViewById(R.id.errorHint);
         Button retry = findViewById(R.id.retry);
+        Button openBrowser = findViewById(R.id.openBrowser);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -68,9 +76,9 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request.isForMainFrame()) {
-                    errorBox.setVisibility(View.VISIBLE);
+                    showError();
                 }
             }
         });
@@ -124,6 +132,10 @@ public class MainActivity extends Activity {
             web.reload();
         });
 
+        openBrowser.setOnClickListener(v -> openExternal(getString(R.string.home_url)));
+
+        errorHint.setText(getString(R.string.error_hint));
+
         String home = getString(R.string.home_url);
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
@@ -132,11 +144,41 @@ public class MainActivity extends Activity {
         }
     }
 
+    private boolean isOnline() {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) return true;
+            NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
+            return nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private void showError() {
+        if (!triedFallback && !isOnline()) {
+            errorHint.setText("ইন্টারনেট সংযোগ নেই। Wi-Fi বা মোবাইল ডেটা চালু করুন।");
+            errorBox.setVisibility(View.VISIBLE);
+            return;
+        }
+        String home = getString(R.string.home_url);
+        String fallback = getString(R.string.fallback_url);
+        if (!triedFallback && fallback != null && !fallback.isEmpty()
+                && !fallback.equals(home)) {
+            triedFallback = true;
+            errorHint.setText("প্রধান ঠিকানা পাওয়া যায়নি, বিকল্প ঠিকানায় চেষ্টা করা হচ্ছে…");
+            errorBox.setVisibility(View.VISIBLE);
+            web.loadUrl(fallback);
+            return;
+        }
+        errorHint.setText(getString(R.string.error_hint));
+        errorBox.setVisibility(View.VISIBLE);
+    }
+
     private boolean handleUrl(String url) {
         if (url.startsWith("http://") || url.startsWith("https://")) {
-            Uri host = Uri.parse(getString(R.string.home_url));
-            Uri target = Uri.parse(url);
-            if (host.getHost() != null && host.getHost().equalsIgnoreCase(target.getHost())) {
+            if (sameHost(url, getString(R.string.home_url))
+                    || sameHost(url, getString(R.string.fallback_url))) {
                 return false;
             }
             openExternal(url);
@@ -148,6 +190,16 @@ public class MainActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    private boolean sameHost(String a, String b) {
+        try {
+            String ha = Uri.parse(a).getHost();
+            String hb = Uri.parse(b).getHost();
+            return ha != null && ha.equalsIgnoreCase(hb);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void openExternal(String url) {
