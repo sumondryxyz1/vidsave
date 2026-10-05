@@ -190,8 +190,17 @@ async def probe(req: ProbeRequest) -> dict[str, Any]:
         info = await asyncio.wait_for(asyncio.to_thread(downloader.probe, url), timeout=120)
     except Exception as exc:  # noqa: BLE001
         detail = str(exc)
+        low = detail.lower()
         unsupported = ("Unsupported URL" in detail or "[generic]" in detail
                        or "Unable to download webpage" in detail or "No video formats" in detail)
+        botcheck = ("not a bot" in low or "sign in to confirm" in low
+                    or "login required" in low or "cookies" in low)
+        if botcheck:
+            raise HTTPException(
+                422,
+                "এই সাইটটি সার্ভারের IP থেকে লগইন/কুকিজ চাইছে (YouTube/X প্রায়ই করে)। "
+                "এই সাইটের জন্য কুকিজ সেট করা লাগবে।",
+            )
         if unsupported:
             raise HTTPException(422, "এই সাইটটি সাপোর্টেড নয়। YouTube, Facebook, Instagram, TikTok, X, Vimeo সহ জনপ্রিয় সাইটের লিংক দিন।")
         raise HTTPException(422, "লিংক থেকে তথ্য বের করা যায়নি। লিংকটি সঠিক কিনা দেখুন।")

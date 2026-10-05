@@ -78,3 +78,17 @@ https://vidsave-tavc.onrender.com
 
 `vidsave.eu.org` চাইলে eu.org-এ ফ্রি সাবডোমেইন অ্যাপ্লাই করুন, তারপর Render-এ
 **Settings → Custom Domains**-এ যোগ করে DNS সেট করুন।
+
+## ৭. YouTube/X ব্লক হলে (গুরুত্বপূর্ণ)
+
+Render-এর ডেটাসেন্টার IP থেকে YouTube ও X প্রায়ই **"not a bot"** চেক দেয়, তাই ওই
+সাইটের ডাউনলোড ফ্রি হোস্টে কাজ নাও করতে পারে। TikTok, Facebook, Instagram, Vimeo,
+Reddit, সরাসরি MP4 — সাধারণত কাজ করে।
+
+সমাধান (যেকোনো একটা):
+- **কুকিজ দিন** — ব্রাউজার থেকে YouTube cookies এক্সপোর্ট করে Render-এ
+  `YT_COOKIES` env var-এ ফাইলের পাথ দিন (age/region/bot-check এড়ায়)।
+- **রেসিডেন্সিয়াল প্রক্সি** — Render-এ `PROXY` env var সেট করুন
+  (`http://user:pass@host:port`)। এতে YouTube-ও কাজ করবে।
+- **নিজের হোস্টে চালান** — Oracle Cloud Free VM বা হোম সার্ভারে চালালে IP ব্লক হয় না।
+
