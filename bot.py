@@ -200,7 +200,8 @@ async def on_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         async with _sem:
             path = await asyncio.wait_for(
                 asyncio.to_thread(
-                    downloader.download, info.webpage_url, tmp, height, audio_only, hook
+                    downloader.download, info.webpage_url, tmp,
+                    height=height, audio_only=audio_only, progress_hook=hook,
                 ),
                 timeout=DOWNLOAD_TIMEOUT,
             )

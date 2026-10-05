@@ -1,4 +1,7 @@
-"""yt-dlp wrapper for downloading media from YouTube, Facebook and other sites."""
+"""yt-dlp wrapper: probing, quality/audio selection, subtitles, playlists, proxy.
+
+Shared by the Telegram bot (bot.py) and the web app (webapp.py).
+"""
 
 from __future__ import annotations
 
@@ -9,8 +12,6 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
-
-import shutil
 
 import static_ffmpeg
 from yt_dlp import YoutubeDL
@@ -24,6 +25,9 @@ FFMPEG_PATH = str(Path(_ffmpeg_bin).parent) if _ffmpeg_bin else None
 
 URL_RE = re.compile(r"https?://[^\s<>\"']+")
 
+# Optional proxy for geo-blocked content or datacenter-IP 403s.
+PROXY = os.getenv("PROXY", "")
+
 # Cookies (optional) let yt-dlp access age/region-restricted or logged-in content.
 # Point these at a Netscape-format cookie file exported from your browser.
 COOKIE_FILES: dict[str, str] = {
@@ -31,6 +35,20 @@ COOKIE_FILES: dict[str, str] = {
     "facebook": os.getenv("FB_COOKIES", ""),
     "instagram": os.getenv("IG_COOKIES", ""),
 }
+
+QUALITY_PRESETS = (2160, 1440, 1080, 720, 480, 360, 240)
+AUDIO_BITRATES = (128, 192, 320)
+
+
+@dataclass
+class Entry:
+    """A single downloadable item (a video, or one playlist entry)."""
+
+    id: str
+    title: str
+    url: str
+    duration: int | None = None
+    thumbnail: str | None = None
 
 
 @dataclass
@@ -42,6 +60,8 @@ class MediaInfo:
     thumbnail: str | None
     webpage_url: str
     formats: list[dict[str, Any]] = field(default_factory=list)
+    is_playlist: bool = False
+    entries: list[Entry] = field(default_factory=list)
 
 
 def extract_url(text: str) -> str | None:
@@ -50,10 +70,9 @@ def extract_url(text: str) -> str | None:
 
 
 def _base_opts() -> dict[str, Any]:
-    return {
+    opts: dict[str, Any] = {
         "quiet": True,
         "no_warnings": True,
-        "noplaylist": True,
         "ffmpeg_location": FFMPEG_PATH,
         "retries": 3,
         "socket_timeout": 30,
@@ -64,6 +83,9 @@ def _base_opts() -> dict[str, Any]:
             )
         },
     }
+    if PROXY:
+        opts["proxy"] = PROXY
+    return opts
 
 
 def _cookie_opts(url: str) -> dict[str, Any]:
@@ -75,12 +97,35 @@ def _cookie_opts(url: str) -> dict[str, Any]:
 
 
 def probe(url: str) -> MediaInfo:
-    """Fetch metadata (title, duration, available formats) without downloading."""
+    """Fetch metadata without downloading. Detects playlists and lists entries."""
     with YoutubeDL({**_base_opts(), **_cookie_opts(url)}) as ydl:
         info = ydl.extract_info(url, download=False)
 
     if info.get("_type") == "playlist":
-        info = info["entries"][0]
+        entries = []
+        for e in (info.get("entries") or [])[:200]:
+            if not e:
+                continue
+            entries.append(
+                Entry(
+                    id=str(e.get("id") or ""),
+                    title=e.get("title") or "media",
+                    url=e.get("webpage_url") or e.get("url") or "",
+                    duration=e.get("duration"),
+                    thumbnail=e.get("thumbnail"),
+                )
+            )
+        return MediaInfo(
+            url=url,
+            title=info.get("title") or "playlist",
+            uploader=info.get("uploader") or info.get("channel") or "",
+            duration=None,
+            thumbnail=info.get("thumbnail") or (entries[0].thumbnail if entries else None),
+            webpage_url=info.get("webpage_url") or url,
+            formats=[],
+            is_playlist=True,
+            entries=entries,
+        )
 
     return MediaInfo(
         url=url,
@@ -114,17 +159,16 @@ def _format_selector(height: int | None, audio_only: bool) -> str:
     )
 
 
-def download(
+def _build_opts(
+    out_dir: Path,
     url: str,
-    out_dir: str | Path,
-    height: int | None = None,
-    audio_only: bool = False,
-    progress_hook: Callable[[dict[str, Any]], None] | None = None,
-) -> Path:
-    """Download media into ``out_dir`` and return the resulting file path."""
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
+    height: int | None,
+    audio_only: bool,
+    audio_bitrate: int,
+    subtitles: bool,
+    playlist: bool,
+    progress_hook: Callable[[dict[str, Any]], None] | None,
+) -> dict[str, Any]:
     opts: dict[str, Any] = {
         **_base_opts(),
         **_cookie_opts(url),
@@ -132,34 +176,90 @@ def download(
         "outtmpl": str(out_dir / "%(title).150B.%(ext)s"),
         "restrictfilenames": False,
         "windowsfilenames": True,
+        "noplaylist": not playlist,
+        "ignoreerrors": playlist,  # keep going if one playlist item fails
+        "concurrent_fragment_downloads": 4,
     }
 
     if audio_only:
         opts["postprocessors"] = [
-            {"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}
+            {"key": "FFmpegExtractAudio", "preferredcodec": "mp3",
+             "preferredquality": str(audio_bitrate)}
         ]
     else:
         opts["merge_output_format"] = "mp4"
 
+    if subtitles and not audio_only:
+        opts["writesubtitles"] = True
+        opts["writeautomaticsub"] = True
+        opts["subtitleslangs"] = ["en", "bn"]
+        opts["postprocessors"] = opts.get("postprocessors", []) + [
+            {"key": "FFmpegEmbedSubtitle", "already_have_subtitle": False}
+        ]
+
     if progress_hook:
         opts["progress_hooks"] = [progress_hook]
 
+    return opts
+
+
+def _final_path(ydl: YoutubeDL, info: dict[str, Any], out_dir: Path, audio_only: bool) -> Path:
+    path = Path(ydl.prepare_filename(info))
+    if audio_only:
+        path = path.with_suffix(".mp3")
+    if not path.exists():
+        candidates = sorted(out_dir.glob(path.stem + ".*"), key=lambda p: p.stat().st_mtime)
+        if candidates:
+            path = candidates[-1]
+    return path
+
+
+def download(
+    url: str,
+    out_dir: str | Path,
+    height: int | None = None,
+    audio_only: bool = False,
+    audio_bitrate: int = 192,
+    subtitles: bool = False,
+    progress_hook: Callable[[dict[str, Any]], None] | None = None,
+) -> Path:
+    """Download a single item into ``out_dir`` and return the resulting file path."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    opts = _build_opts(out_dir, url, height, audio_only, audio_bitrate, subtitles, False, progress_hook)
     with YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=True)
         if info.get("_type") == "playlist":
-            info = info["entries"][0]
-        path = Path(ydl.prepare_filename(info))
-
-    if audio_only:
-        path = path.with_suffix(".mp3")
-
+            info = (info.get("entries") or [{}])[0]
+        path = _final_path(ydl, info, out_dir, audio_only)
     if not path.exists():
-        candidates = sorted(out_dir.glob(path.stem + ".*"), key=lambda p: p.stat().st_mtime)
-        if not candidates:
-            raise FileNotFoundError("Download finished but no output file was found.")
-        path = candidates[-1]
-
+        raise FileNotFoundError("Download finished but no output file was found.")
     return path
+
+
+def download_playlist(
+    url: str,
+    out_dir: str | Path,
+    height: int | None = None,
+    audio_only: bool = False,
+    audio_bitrate: int = 192,
+    subtitles: bool = False,
+    progress_hook: Callable[[dict[str, Any]], None] | None = None,
+) -> list[Path]:
+    """Download every entry of a playlist/channel and return the file paths."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    opts = _build_opts(out_dir, url, height, audio_only, audio_bitrate, subtitles, True, progress_hook)
+    with YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+
+    ext = ".mp3" if audio_only else None
+    files = [p for p in sorted(out_dir.iterdir()) if p.is_file()]
+    if ext:
+        files = [p for p in files if p.suffix == ext]
+    if not files:
+        raise FileNotFoundError("Playlist download produced no files.")
+    return files
 
 
 def make_temp_dir() -> str:

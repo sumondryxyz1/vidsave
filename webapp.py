@@ -1,7 +1,8 @@
 """Web app for the media downloader: paste a link, pick quality, download.
 
-Serves a small single-page UI and exposes a JSON/SSE API backed by the same
-yt-dlp wrapper used by the Telegram bot (see downloader.py).
+Serves a single-page UI and a JSON/SSE API backed by downloader.py.
+Supports single videos, playlists (zipped), audio bitrate choice, subtitles,
+job cancellation, and optional proxy.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import os
 import threading
 import time
 import uuid
+import zipfile
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -30,6 +32,32 @@ log = logging.getLogger("webapp")
 STATIC_DIR = Path(__file__).parent / "static"
 JOB_TTL = int(os.getenv("JOB_TTL", "3600"))  # seconds to keep finished files
 MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT", "3"))
+
+_sem = threading.Semaphore(MAX_CONCURRENT)
+_lock = threading.Lock()
+_jobs: dict[str, "Job"] = {}
+
+
+@dataclass
+class Job:
+    id: str
+    url: str
+    quality: str
+    audio_bitrate: int = 192
+    subtitles: bool = False
+    playlist: bool = False
+    status: str = "queued"  # queued|downloading|ready|error|cancelled
+    progress: float = 0.0
+    speed: str = ""
+    eta: str = ""
+    item: int = 0
+    total_items: int = 0
+    title: str = ""
+    filename: str = ""
+    path: str = ""
+    error: str = ""
+    created: float = field(default_factory=time.time)
+    cancel: bool = False
 
 
 async def _janitor() -> None:
@@ -55,26 +83,6 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Downloader", docs_url=None, redoc_url=None, lifespan=lifespan)
 
-_sem = threading.Semaphore(MAX_CONCURRENT)
-_lock = threading.Lock()
-_jobs: dict[str, "Job"] = {}
-
-
-@dataclass
-class Job:
-    id: str
-    url: str
-    quality: str
-    status: str = "queued"  # queued|downloading|ready|error
-    progress: float = 0.0
-    speed: str = ""
-    eta: str = ""
-    title: str = ""
-    filename: str = ""
-    path: str = ""
-    error: str = ""
-    created: float = field(default_factory=time.time)
-
 
 class ProbeRequest(BaseModel):
     url: str
@@ -83,6 +91,9 @@ class ProbeRequest(BaseModel):
 class DownloadRequest(BaseModel):
     url: str
     quality: str = "best"  # "best" | "audio" | a height like "1080"
+    audio_bitrate: int = 192
+    subtitles: bool = False
+    playlist: bool = False
 
 
 def _parse_quality(quality: str) -> tuple[int | None, bool]:
@@ -96,6 +107,7 @@ def _parse_quality(quality: str) -> tuple[int | None, bool]:
 def _snapshot(job: Job) -> dict[str, Any]:
     data = asdict(job)
     data.pop("path", None)
+    data.pop("cancel", None)
     data["ready"] = job.status == "ready"
     return data
 
@@ -103,10 +115,12 @@ def _snapshot(job: Job) -> dict[str, Any]:
 def _run_download(job: Job) -> None:
     """Worker thread: download the media and update the job as it goes."""
     height, audio_only = _parse_quality(job.quality)
-    tmp = downloader.make_temp_dir()
+    tmp = Path(downloader.make_temp_dir())
     last = [0.0]
 
     def hook(d: dict) -> None:
+        if job.cancel:
+            raise RuntimeError("cancelled by user")
         if d.get("status") != "downloading":
             return
         now = time.time()
@@ -120,25 +134,51 @@ def _run_download(job: Job) -> None:
             job.progress = round(done / total * 100, 1) if total else job.progress
             job.speed = (d.get("_speed_str") or "").strip()
             job.eta = (d.get("_eta_str") or "").strip()
+            job.item = int(d.get("playlist_index") or 0)
+            job.total_items = int(d.get("playlist_count") or job.total_items or 0)
+            if d.get("info_dict", {}).get("title"):
+                job.title = d["info_dict"]["title"]
 
     try:
         with _sem:
             with _lock:
                 job.status = "downloading"
-            path = downloader.download(
-                job.url, tmp, height=height, audio_only=audio_only, progress_hook=hook
-            )
+            if job.playlist:
+                files = downloader.download_playlist(
+                    job.url, tmp, height=height, audio_only=audio_only,
+                    audio_bitrate=job.audio_bitrate, subtitles=job.subtitles,
+                    progress_hook=hook,
+                )
+                if job.cancel:
+                    raise RuntimeError("cancelled")
+                zip_path = tmp / f"{_safe(job.title or 'playlist')}.zip"
+                with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                    for f in files:
+                        zf.write(f, arcname=f.name)
+                result = zip_path
+            else:
+                result = downloader.download(
+                    job.url, tmp, height=height, audio_only=audio_only,
+                    audio_bitrate=job.audio_bitrate, subtitles=job.subtitles,
+                    progress_hook=hook,
+                )
         with _lock:
-            job.path = str(path)
-            job.filename = path.name
+            job.path = str(result)
+            job.filename = result.name
             job.progress = 100.0
             job.status = "ready"
     except Exception as exc:  # noqa: BLE001 - report any failure to the client
-        log.warning("download failed for %s: %s", job.url, exc)
+        cancelled = job.cancel or "cancel" in str(exc).lower()
+        log.warning("download %s for %s: %s", "cancelled" if cancelled else "failed", job.url, exc)
         with _lock:
-            job.status = "error"
-            job.error = f"{type(exc).__name__}: {exc}"
+            job.status = "cancelled" if cancelled else "error"
+            job.error = "" if cancelled else f"{type(exc).__name__}: {exc}"
         downloader.cleanup(tmp)
+
+
+def _safe(name: str) -> str:
+    keep = "".join(c for c in name if c.isalnum() or c in " -_")
+    return (keep.strip() or "playlist")[:80]
 
 
 @app.post("/api/probe")
@@ -152,15 +192,17 @@ async def probe(req: ProbeRequest) -> dict[str, Any]:
         raise HTTPException(422, f"লিংক থেকে তথ্য বের করা যায়নি: {type(exc).__name__}")
 
     heights = downloader.available_heights(info)
-    picks = sorted({h for h in (2160, 1440, 1080, 720, 480, 360, 240) if h in heights},
-                   reverse=True)[:5]
+    picks = sorted({h for h in downloader.QUALITY_PRESETS if h in heights}, reverse=True)[:5]
     return {
         "title": info.title,
         "uploader": info.uploader,
         "duration": info.duration,
         "thumbnail": info.thumbnail,
         "webpage_url": info.webpage_url,
+        "is_playlist": info.is_playlist,
+        "entry_count": len(info.entries),
         "qualities": picks,
+        "audio_bitrates": list(downloader.AUDIO_BITRATES),
     }
 
 
@@ -169,11 +211,24 @@ async def start_download(req: DownloadRequest) -> dict[str, str]:
     url = downloader.extract_url(req.url) or req.url.strip()
     if not url.startswith("http"):
         raise HTTPException(400, "একটি বৈধ লিংক দিন।")
-    job = Job(id=uuid.uuid4().hex[:12], url=url, quality=req.quality)
+    job = Job(
+        id=uuid.uuid4().hex[:12], url=url, quality=req.quality,
+        audio_bitrate=req.audio_bitrate, subtitles=req.subtitles, playlist=req.playlist,
+    )
     with _lock:
         _jobs[job.id] = job
     threading.Thread(target=_run_download, args=(job,), daemon=True).start()
     return {"job_id": job.id}
+
+
+@app.post("/api/cancel/{job_id}")
+async def cancel(job_id: str) -> dict[str, bool]:
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "job পাওয়া যায়নি")
+    with _lock:
+        job.cancel = True
+    return {"cancelled": True}
 
 
 @app.get("/api/progress/{job_id}")
@@ -194,7 +249,7 @@ async def progress(job_id: str) -> StreamingResponse:
             if payload != last_payload:
                 yield f"data: {payload}\n\n"
                 last_payload = payload
-            if data["status"] in ("ready", "error"):
+            if data["status"] in ("ready", "error", "cancelled"):
                 return
             await asyncio.sleep(0.4)
 
