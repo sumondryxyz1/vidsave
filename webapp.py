@@ -281,6 +281,30 @@ async def index() -> HTMLResponse:
     return HTMLResponse((STATIC_DIR / "index.html").read_text(encoding="utf-8"))
 
 
+def _page(name: str) -> HTMLResponse:
+    return HTMLResponse((STATIC_DIR / f"{name}.html").read_text(encoding="utf-8"))
+
+
+@app.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
+async def privacy() -> HTMLResponse:
+    return _page("privacy")
+
+
+@app.get("/terms", response_class=HTMLResponse, include_in_schema=False)
+async def terms() -> HTMLResponse:
+    return _page("terms")
+
+
+@app.get("/about", response_class=HTMLResponse, include_in_schema=False)
+async def about() -> HTMLResponse:
+    return _page("about")
+
+
+@app.get("/contact", response_class=HTMLResponse, include_in_schema=False)
+async def contact() -> HTMLResponse:
+    return _page("contact")
+
+
 @app.get("/manifest.webmanifest", include_in_schema=False)
 async def manifest() -> FileResponse:
     return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")

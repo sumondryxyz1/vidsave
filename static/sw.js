@@ -1,5 +1,5 @@
-const CACHE = "vidsave-v4";
-const SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
+const CACHE = "vidsave-v5";
+const SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/privacy", "/terms", "/about", "/contact"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

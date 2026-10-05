@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>যোগাযোগ — VidSave</title>
+<meta name="description" content="VidSave-এর সাথে যোগাযোগ করুন — প্রশ্ন, সমস্যা বা কপিরাইট অভিযোগ জানান।" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<style>
+:root{--bg:#080b12;--panel:#0f1523;--line:#1e2940;--text:#eef2f9;--muted:#9aa7bd;--brand:#6d8cff;--brand2:#a06bff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;line-height:1.75}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:820px;margin:0 auto;padding:28px 20px 70px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--text)}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center}
+.brand-mark svg{width:18px;height:18px}
+.brand-name span{background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.home{font-size:14px;color:var(--muted)}
+h1{font-size:27px;margin:0 0 6px}
+p,li{color:#cfd8e8;font-size:15px}
+h2{font-size:18px;margin:26px 0 8px}
+ul{padding-left:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px}
+label{display:block;font-size:14px;margin:12px 0 6px;color:var(--muted)}
+input,textarea{width:100%;background:#0a0f1b;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 13px;font:inherit}
+textarea{min-height:120px;resize:vertical}
+button{margin-top:16px;background:linear-gradient(135deg,var(--brand),var(--brand2));border:0;color:#fff;font-weight:700;padding:12px 22px;border-radius:11px;font-size:15px;cursor:pointer}
+.mail{font-size:15px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding-top:18px;color:var(--muted);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v10" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7.5 9.5 12 14l4.5-4.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+      <span class="brand-name">Vid<span>Save</span></span>
+    </a>
+    <a class="home" href="/">← হোমে ফিরুন</a>
+  </header>
+
+  <h1>যোগাযোগ</h1>
+  <p>প্রশ্ন, সেবা সংক্রান্ত সমস্যা, বা কপিরাইট অভিযোগ — যেকোনো বিষয়ে আমাদের জানাতে পারেন। আমরা যথাসম্ভব দ্রুত উত্তর দেওয়ার চেষ্টা করি।</p>
+
+  <div class="card">
+    <b>ইমেইল</b>
+    <p class="mail"><a href="mailto:support@vidsave.example">support@vidsave.example</a></p>
+    <p style="color:var(--muted);font-size:13px">নিচের ফর্মটি পূরণ করলে আপনার ইমেইল অ্যাপে মেসেজ তৈরি হবে।</p>
+
+    <label for="name">আপনার নাম</label>
+    <input id="name" type="text" placeholder="নাম লিখুন" />
+    <label for="msg">বার্তা</label>
+    <textarea id="msg" placeholder="আপনার প্রশ্ন বা সমস্যা বিস্তারিত লিখুন…"></textarea>
+    <button id="send">ইমেইল পাঠান</button>
+  </div>
+
+  <h2>সাধারণ বিষয়</h2>
+  <ul>
+    <li><b>ডাউনলোড সমস্যা:</b> কোন সাইট ও কী মেসেজ আসছে জানালে দ্রুত সমাধান হয়।</li>
+    <li><b>কপিরাইট:</b> লিংক ও বিস্তারিত প্রমাণসহ জানান।</li>
+    <li><b>বিজ্ঞাপন:</b> সেবা ফ্রি রাখতে বিজ্ঞাপন দেখানো হয়।</li>
+  </ul>
+
+  <footer>
+    <a href="/">হোম</a>
+    <a href="/privacy">প্রাইভেসি পলিসি</a>
+    <a href="/terms">ব্যবহারের শর্তাবলি</a>
+    <a href="/about">আমাদের সম্পর্কে</a>
+  </footer>
+</div>
+<script>
+document.getElementById("send").addEventListener("click", () => {
+  const n = document.getElementById("name").value.trim();
+  const m = document.getElementById("msg").value.trim();
+  const body = encodeURIComponent((n ? "নাম: " + n + "\n\n" : "") + m);
+  window.location.href = "mailto:support@vidsave.example?subject=" + encodeURIComponent("VidSave যোগাযোগ") + "&body=" + body;
+});
+</script>
+</body>
+</html>
