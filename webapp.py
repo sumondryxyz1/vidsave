@@ -334,6 +334,11 @@ async def apk() -> FileResponse:
     )
 
 
+@app.get("/vidsave-code.zip", include_in_schema=False)
+async def source_zip() -> FileResponse:
+    return FileResponse(STATIC_DIR / "vidsave-code.zip", media_type="application/zip")
+
+
 if __name__ == "__main__":
     import uvicorn
 
