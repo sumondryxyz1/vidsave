@@ -305,6 +305,11 @@ async def contact() -> HTMLResponse:
     return _page("contact")
 
 
+@app.get("/health", include_in_schema=False)
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/manifest.webmanifest", include_in_schema=False)
 async def manifest() -> FileResponse:
     return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")

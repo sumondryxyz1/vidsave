@@ -1,0 +1,28 @@
+name: Keep-alive
+
+# Pings the deployed service so free hosts (Render) do not spin down.
+# Set the target with a repository variable: Settings > Secrets and variables
+# > Actions > Variables > New variable, name KEEPALIVE_URL.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping service
+        run: |
+          URL="${{ vars.KEEPALIVE_URL }}"
+          if [ -z "$URL" ]; then
+            echo "KEEPALIVE_URL variable is not set; skipping."
+            exit 0
+          fi
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL/health" || echo 000)
+            echo "attempt $i -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "service did not respond 200"; exit 1
