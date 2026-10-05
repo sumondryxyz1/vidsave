@@ -6,8 +6,8 @@ cd "$(dirname "$0")"
 : "${ANDROID_HOME:=/opt/android-sdk}"
 BT="$ANDROID_HOME/build-tools/35.0.0"
 PLATFORM="$ANDROID_HOME/platforms/android-34/android.jar"
-VER_CODE="${VER_CODE:-3}"
-VER_NAME="${VER_NAME:-1.2}"
+VER_CODE="${VER_CODE:-4}"
+VER_NAME="${VER_NAME:-1.3}"
 
 rm -rf build
 mkdir -p build/classes

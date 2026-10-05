@@ -71,8 +71,14 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                progress.setVisibility(View.VISIBLE);
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
+                errorBox.setVisibility(View.GONE);
             }
 
             @Override
