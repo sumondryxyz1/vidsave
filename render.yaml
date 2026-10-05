@@ -9,3 +9,9 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: MAX_CONCURRENT
+        value: 2
+      - key: MAX_FILESIZE_MB
+        value: 500
+      - key: JOB_TTL
+        value: 1800
