@@ -1,0 +1,18 @@
+# Bot credentials
+.env
+*.session
+cookies.txt
+YT_COOKIES
+FB_COOKIES
+IG_COOKIES
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Downloads / temp
+downloads/
+dlbot-*/
+*.part

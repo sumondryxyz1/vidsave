@@ -1,0 +1,3 @@
+yt-dlp>=2025.1.1
+python-telegram-bot>=21.0
+static-ffmpeg>=2.5
