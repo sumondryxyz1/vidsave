@@ -15,10 +15,8 @@ jobs:
       - name: Ping service
         run: |
           URL="${{ vars.KEEPALIVE_URL }}"
-          if [ -z "$URL" ]; then
-            echo "KEEPALIVE_URL variable is not set; skipping."
-            exit 0
-          fi
+          URL="${URL:-https://vidsave.onrender.com}"
+          echo "pinging $URL/health"
           for i in 1 2 3; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL/health" || echo 000)
             echo "attempt $i -> $code"
