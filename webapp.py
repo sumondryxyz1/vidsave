@@ -281,6 +281,21 @@ async def index() -> HTMLResponse:
     return HTMLResponse((STATIC_DIR / "index.html").read_text(encoding="utf-8"))
 
 
+@app.get("/manifest.webmanifest", include_in_schema=False)
+async def manifest() -> FileResponse:
+    return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")
+
+
+@app.get("/icon.svg", include_in_schema=False)
+async def icon() -> FileResponse:
+    return FileResponse(STATIC_DIR / "icon.svg", media_type="image/svg+xml")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker() -> FileResponse:
+    return FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
+
+
 if __name__ == "__main__":
     import uvicorn
 

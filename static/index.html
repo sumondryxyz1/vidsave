@@ -3,144 +3,312 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="যেকোনো সাইট থেকে ভিডিও ও অডিও ডাউনলোড করুন।" />
-<title>Downloader — ভিডিও ও অডিও ডাউনলোড</title>
+<meta name="description" content="যেকোনো সাইট থেকে ভিডিও ও অডিও ডাউনলোড করুন — YouTube, Facebook, Instagram, TikTok সহ ১০০০+ সাইট। উচ্চ কোয়ালিটি, MP3, প্লেলিস্ট সাপোর্ট।" />
+<meta name="theme-color" content="#0b0f17" />
+<title>DownLoadr — যেকোনো সাইট থেকে ভিডিও ও অডিও নামান</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="DownLoadr" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #0a0e16;
-    --panel: #141b2b;
-    --border: rgba(255,255,255,.09);
+    --bg: #080b12;
+    --bg2: #0d1220;
+    --panel: rgba(20, 27, 43, 0.72);
+    --panel-solid: #141b2b;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
     --text: #eef2f9;
-    --muted: #94a0b8;
+    --muted: #97a3ba;
     --brand: #6d8cff;
     --brand2: #b06dff;
     --ok: #35d39a;
     --err: #ff6b81;
+    --radius: 20px;
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    --maxw: 1080px;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; min-height: 100vh; color: var(--text);
+    margin: 0;
     font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
     background: var(--bg);
-    background-image: radial-gradient(60rem 40rem at 50% -10%, rgba(109,140,255,.22), transparent 60%);
-    display: flex; flex-direction: column; align-items: center;
-    padding: 24px 18px 40px;
+    background-image:
+      radial-gradient(70rem 45rem at 15% -12%, rgba(109, 140, 255, 0.26), transparent 60%),
+      radial-gradient(55rem 45rem at 92% -6%, rgba(176, 109, 255, 0.2), transparent 55%),
+      linear-gradient(180deg, var(--bg2), var(--bg));
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  .top { width: 100%; max-width: 560px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 46px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
-  .brand i {
-    width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--brand), var(--brand2)); font-style: normal; font-size: 16px;
-  }
-  .home-btn {
-    display: none; text-decoration: none; color: var(--text); font-size: 14px; font-weight: 600;
-    background: rgba(255,255,255,.06); border: 1px solid var(--border);
-    padding: 9px 15px; border-radius: 11px; transition: border-color .15s;
-  }
-  .home-btn.show { display: inline-block; }
-  .home-btn:hover { border-color: var(--brand); }
+  h1, h2, h3, .brand-name { font-family: "Sora", "Hind Siliguri", sans-serif; }
+  a { color: inherit; }
+  .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
 
-  .wrap { width: 100%; max-width: 560px; }
-  .head { text-align: center; margin-bottom: 26px; }
-  .head h1 { font-size: clamp(24px, 5vw, 32px); margin: 0 0 10px; font-weight: 700; }
-  .head p { color: var(--muted); margin: 0; font-size: 15px; }
+  /* ---------- Navbar ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 40;
+    backdrop-filter: blur(16px);
+    background: rgba(8, 11, 18, 0.72);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 11px; flex: none;
+    display: grid; place-items: center; color: #fff; font-size: 17px;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    box-shadow: 0 8px 24px rgba(109, 140, 255, 0.45);
+  }
+  .brand-name { font-size: 19px; font-weight: 800; letter-spacing: -0.2px; }
+  .brand-name span { color: var(--brand); }
+  .nav-links { display: flex; align-items: center; gap: 26px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 500; transition: color .16s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    padding: 10px 18px; border-radius: 11px; font-weight: 700; font-size: 14px;
+    color: #fff !important; background: linear-gradient(135deg, var(--brand), var(--brand2));
+    box-shadow: 0 8px 22px rgba(109, 140, 255, 0.35);
+  }
+  .nav-home {
+    display: none; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 11px; font-weight: 700; font-size: 14px;
+    color: var(--text) !important; background: rgba(255,255,255,.06);
+    border: 1px solid var(--border); cursor: pointer;
+  }
+  .nav-home.show { display: inline-flex; }
+  .nav-home:hover { border-color: var(--brand); color: #fff !important; }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
-  .row { display: flex; gap: 10px; }
+  /* ---------- Hero ---------- */
+  .hero { padding: 72px 0 34px; text-align: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 13px; font-weight: 600; color: #b9c6ff;
+    background: rgba(109, 140, 255, 0.12); border: 1px solid rgba(109, 140, 255, 0.3);
+    padding: 7px 15px; border-radius: 999px; margin-bottom: 22px;
+  }
+  .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 56px); line-height: 1.12; margin: 0 0 18px;
+    letter-spacing: -1px; font-weight: 800;
+    background: linear-gradient(120deg, #fff 20%, #b9c6ff 58%, #d9b8ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { color: var(--muted); font-size: clamp(15px, 2.2vw, 18px); max-width: 620px; margin: 0 auto; }
+
+  /* ---------- Downloader card ---------- */
+  .tool { padding: 30px 0 10px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    backdrop-filter: blur(16px); padding: 24px;
+  }
+  .row { display: flex; gap: 11px; }
   input[type=url] {
-    flex: 1; min-width: 0; font-family: inherit; font-size: 15px; color: var(--text);
-    background: rgba(0,0,0,.35); border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px 16px; outline: none; transition: border-color .15s;
+    flex: 1; min-width: 0;
+    background: rgba(6, 9, 15, 0.85); border: 1px solid var(--border-strong);
+    border-radius: 14px; color: var(--text); font-size: 15.5px;
+    padding: 16px 18px; outline: none; transition: border-color .18s, box-shadow .18s;
+    font-family: inherit;
   }
   input[type=url]::placeholder { color: #6b7688; }
-  input[type=url]:focus { border-color: var(--brand); }
+  input[type=url]:focus { border-color: rgba(109, 140, 255, 0.75); box-shadow: 0 0 0 4px rgba(109, 140, 255, 0.16); }
   .btn {
-    font-family: inherit; font-size: 15px; font-weight: 700; border: none; border-radius: 12px;
-    padding: 14px 22px; color: #fff; cursor: pointer; white-space: nowrap;
+    font-family: inherit; font-size: 15.5px; font-weight: 700;
+    border: none; border-radius: 14px; cursor: pointer;
+    padding: 16px 26px; color: #fff; white-space: nowrap;
     background: linear-gradient(135deg, var(--brand), var(--brand2));
-    transition: filter .15s, transform .12s, opacity .15s;
+    transition: transform .12s, filter .18s, opacity .18s;
   }
   .btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
   .btn:disabled { opacity: .55; cursor: not-allowed; }
   .btn.danger { background: linear-gradient(135deg, #ff5f6d, #ff8a5b); }
-  .btn.ghost { background: rgba(255,255,255,.07); border: 1px solid var(--border); }
+  .btn.wide { width: 100%; }
+  .trust {
+    display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center;
+    margin-top: 18px; color: var(--muted); font-size: 13.5px;
+  }
+  .trust span { display: inline-flex; align-items: center; gap: 7px; }
+  .trust b { color: var(--ok); font-weight: 700; }
 
-  .result { margin-top: 18px; display: none; }
-  .result.show { display: block; animation: rise .3s ease both; }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .meta { display: flex; gap: 14px; align-items: center; }
-  .thumb { width: 120px; aspect-ratio: 16/9; object-fit: cover; border-radius: 11px; border: 1px solid var(--border); background: #000; }
-  .meta h2 { font-size: 16px; margin: 0 0 5px; line-height: 1.35; }
-  .meta p { margin: 0; color: var(--muted); font-size: 13px; }
-
-  .label { font-size: 12px; color: var(--muted); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* ---------- Result ---------- */
+  .result { margin-top: 22px; display: none; }
+  .result.show { display: block; animation: rise .38s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .meta { display: flex; gap: 16px; align-items: center; padding-top: 4px; }
+  .thumb {
+    width: 140px; aspect-ratio: 16/9; flex: none; object-fit: cover;
+    border-radius: 13px; border: 1px solid var(--border); background: #000;
+  }
+  .meta .txt { min-width: 0; }
+  .meta h2 { font-size: 17.5px; margin: 0 0 6px; line-height: 1.35; font-weight: 700; }
+  .meta p { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .badge {
+    display: inline-block; font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+    border-radius: 999px; margin-left: 9px; vertical-align: middle;
+    background: rgba(109, 140, 255, 0.18); color: #b9c6ff; border: 1px solid rgba(109, 140, 255, 0.35);
+  }
+  .label {
+    font-size: 12px; color: var(--muted); margin: 22px 2px 9px;
+    text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; }
   .chip {
-    font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer;
-    background: rgba(255,255,255,.05); border: 1px solid var(--border);
-    padding: 9px 15px; border-radius: 999px; transition: all .15s;
+    border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.04);
+    color: var(--text); padding: 10px 16px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all .15s;
   }
-  .chip:hover { border-color: var(--brand); }
-  .chip.active { background: linear-gradient(135deg, var(--brand), var(--brand2)); border-color: transparent; }
-
-  .toggles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .chip:hover { border-color: rgba(109, 140, 255, 0.6); }
+  .chip.active { background: linear-gradient(135deg, var(--brand), var(--brand2)); border-color: transparent; color: #fff; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 22px; }
   .toggle {
-    display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;
-    background: rgba(255,255,255,.05); border: 1px solid var(--border); padding: 9px 14px; border-radius: 11px;
+    display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+    font-size: 14px; background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-strong); padding: 10px 15px;
+    border-radius: 13px; user-select: none; transition: border-color .15s;
   }
+  .toggle:hover { border-color: rgba(109, 140, 255, 0.5); }
   .toggle input { accent-color: var(--brand); width: 16px; height: 16px; }
-
-  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .actions { display: flex; gap: 11px; margin-top: 22px; }
   .actions .btn { flex: 1; }
-  .bar-wrap { margin-top: 16px; display: none; }
+  .bar-wrap { margin-top: 20px; display: none; }
   .bar-wrap.show { display: block; }
-  .bar-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
-  .bar { height: 9px; border-radius: 999px; background: rgba(255,255,255,.09); overflow: hidden; }
-  .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), var(--brand2)); transition: width .3s; }
-  .status { margin-top: 13px; font-size: 14px; }
+  .bar-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 9px; gap: 10px; }
+  .bar { height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--brand), var(--brand2)); transition: width .3s ease; }
+  .status { margin-top: 15px; font-size: 14.5px; }
   .status.ok { color: var(--ok); }
   .status.err { color: var(--err); }
-  .save { display: none; margin-top: 15px; }
+  .save { display: none; margin-top: 18px; text-align: center; text-decoration: none; }
   .save.show { display: block; }
-  .save .btn { display: block; width: 100%; text-align: center; text-decoration: none; }
+  .save .btn { display: inline-block; }
 
-  .foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 28px; }
+  /* ---------- Sections ---------- */
+  section { padding: 62px 0; }
+  .sec-head { text-align: center; margin-bottom: 44px; }
+  .sec-head h2 { font-size: clamp(24px, 4vw, 34px); margin: 0 0 12px; letter-spacing: -0.5px; }
+  .sec-head p { color: var(--muted); max-width: 560px; margin: 0 auto; font-size: 16px; }
+  .grid { display: grid; gap: 18px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+  .feature {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px; transition: transform .18s, border-color .18s;
+  }
+  .feature:hover { transform: translateY(-3px); border-color: rgba(109, 140, 255, 0.4); }
+  .feature .ic {
+    width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center;
+    font-size: 21px; margin-bottom: 15px;
+    background: rgba(109, 140, 255, 0.14); border: 1px solid rgba(109, 140, 255, 0.28);
+  }
+  .feature h3 { font-size: 16.5px; margin: 0 0 8px; font-weight: 700; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .steps { counter-reset: step; }
+  .step { position: relative; padding: 22px 22px 22px 66px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: 20px; top: 22px;
+    width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+    font-family: "Sora", sans-serif; font-weight: 800; font-size: 15px; color: #fff;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+  }
+  .step h3 { margin: 0 0 6px; font-size: 16px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .platforms { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--border); padding: 11px 18px; border-radius: 999px;
+  }
+  .pill i { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand2)); }
+
+  .faq-item { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+  .faq-item summary {
+    cursor: pointer; padding: 18px 22px; font-weight: 600; font-size: 15.5px;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; font-size: 22px; color: var(--brand); font-weight: 400; }
+  .faq-item[open] summary::after { content: "−"; }
+  .faq-item p { margin: 0; padding: 0 22px 20px; color: var(--muted); font-size: 14.5px; }
+
+  /* ---------- Footer ---------- */
+  footer { border-top: 1px solid var(--border); padding: 46px 0 34px; margin-top: 30px; }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 34px; }
+  @media (max-width: 720px) { .foot-grid { grid-template-columns: 1fr; gap: 26px; } }
+  .foot-brand p { color: var(--muted); font-size: 14px; margin: 14px 0 0; max-width: 320px; }
+  .foot-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 0 0 14px; }
+  .foot-col a { display: block; color: var(--text); text-decoration: none; font-size: 14.5px; margin-bottom: 10px; opacity: .82; transition: opacity .15s, color .15s; }
+  .foot-col a:hover { opacity: 1; color: var(--brand); }
+  .foot-bottom {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    border-top: 1px solid var(--border); margin-top: 36px; padding-top: 22px;
+    color: var(--muted); font-size: 13px;
+  }
 </style>
 </head>
 <body>
 
-<div class="top">
-  <div class="brand"><i>⬇</i> Downloader</div>
-  <a class="home-btn" id="homeBtn" href="/">হোম</a>
-</div>
-
-<div class="wrap">
-  <div class="head">
-    <h1>ভিডিও ও অডিও ডাউনলোড করুন</h1>
-    <p>লিংক পেস্ট করুন, কোয়ালিটি বেছে নিন — ব্যস।</p>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">⬇</span>
+      <span class="brand-name">Down<span>Load</span>r</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">ফিচার</a>
+      <a href="#how">কীভাবে কাজ করে</a>
+      <a href="#faq">প্রশ্ন</a>
+      <button type="button" class="nav-home" id="homeBtn">🏠 হোম</button>
+      <button type="button" class="nav-home" id="installBtn" style="display:none">📲 অ্যাপ ইনস্টল</button>
+      <a href="#tool" class="nav-cta">ডাউনলোড শুরু করুন</a>
+    </div>
   </div>
+</nav>
 
+<header class="hero container" id="top">
+  <span class="eyebrow"><i></i> ১০০০+ সাইট সাপোর্টেড · সম্পূর্ণ ফ্রি</span>
+  <h1>যেকোনো সাইট থেকে<br />ভিডিও ও অডিও নামান</h1>
+  <p>লিংক পেস্ট করুন, কোয়ালিটি বেছে নিন — সেকেন্ডেই ফাইল ডাউনলোড। YouTube, Facebook, Instagram, TikTok, X সহ জনপ্রিয় সব প্ল্যাটফর্ম এক জায়গায়।</p>
+</header>
+
+<div class="tool container" id="tool">
   <div class="card">
     <form class="row" id="form">
-      <input type="url" id="url" placeholder="ভিডিওর লিংক পেস্ট করুন…" autocomplete="off" required />
+      <input type="url" id="url" placeholder="ভিডিওর লিংক এখানে পেস্ট করুন…" autocomplete="off" required />
       <button type="submit" class="btn" id="probeBtn">খুঁজুন</button>
     </form>
 
+    <div class="trust">
+      <span><b>✓</b> রেজিস্ট্রেশন লাগবে না</span>
+      <span><b>✓</b> 4K পর্যন্ত কোয়ালিটি</span>
+      <span><b>✓</b> MP3 অডিও</span>
+      <span><b>✓</b> প্লেলিস্ট সাপোর্ট</span>
+    </div>
+
     <div class="result" id="result">
       <div id="details">
-      <div class="meta" id="metaRow">
+      <div class="meta">
         <img class="thumb" id="thumb" alt="" />
-        <div>
+        <div class="txt">
           <h2 id="title"></h2>
           <p id="metaLine"></p>
         </div>
       </div>
 
       <div id="qualityBlock">
-        <div class="label">কোয়ালিটি</div>
+        <div class="label">ভিডিও কোয়ালিটি</div>
         <div class="chips" id="chips"></div>
       </div>
 
@@ -151,16 +319,16 @@
 
       <div class="toggles">
         <label class="toggle" id="subsToggle" style="display:none">
-          <input type="checkbox" id="subs" /> সাবটাইটেল
+          <input type="checkbox" id="subs" /> সাবটাইটেল এম্বেড করুন
         </label>
         <label class="toggle" id="playlistToggle" style="display:none">
-          <input type="checkbox" id="playlist" /> পুরো প্লেলিস্ট (ZIP)
+          <input type="checkbox" id="playlist" /> পুরো প্লেলিস্ট নামান (ZIP)
         </label>
       </div>
 
       <div class="actions">
         <button id="dlBtn" class="btn">ডাউনলোড</button>
-        <button id="cancelBtn" class="btn danger" style="display:none">বাতিল</button>
+        <button id="cancelBtn" class="btn danger" style="display:none">বাতিল করুন</button>
       </div>
 
       <div class="bar-wrap" id="barWrap">
@@ -173,23 +341,126 @@
       <a class="save" id="save" download><span class="btn">⬇ ফাইল সেভ করুন</span></a>
     </div>
   </div>
-
-  <p class="foot">শুধু নিজের বা অনুমোদিত কনটেন্ট নামান।</p>
 </div>
+
+<section id="features">
+  <div class="container">
+    <div class="sec-head">
+      <h2>সব ফিচার এক জায়গায়</h2>
+      <p>সহজ, দ্রুত আর নির্ভরযোগ্য — আপনার পছন্দমতো ভিডিও আর অডিও নামানোর পূর্ণ নিয়ন্ত্রণ।</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="feature"><div class="ic">🎬</div><h3>4K পর্যন্ত কোয়ালিটি</h3><p>2160p, 1440p, 1080p, 720p — সোর্সে যেটা আছে, সেটাই বেছে নিন।</p></div>
+      <div class="feature"><div class="ic">🎵</div><h3>MP3 অডিও</h3><p>128, 192 বা 320 kbps বিটরেটে গান ও অডিও আলাদা করে নামান।</p></div>
+      <div class="feature"><div class="ic">🎞️</div><h3>প্লেলিস্ট ও চ্যানেল</h3><p>পুরো প্লেলিস্ট একসাথে নামিয়ে এক ক্লিকে ZIP করে নিন।</p></div>
+      <div class="feature"><div class="ic">💬</div><h3>সাবটাইটেল এম্বেড</h3><p>ভিডিওর সাথে সাবটাইটেল যুক্ত করে দেয় — আলাদা ফাইলের ঝামেলা নেই।</p></div>
+      <div class="feature"><div class="ic">⚡</div><h3>দ্রুত ডাউনলোড</h3><p>একাধিক কানেকশনে নামে, তাই বড় ফাইলও দ্রুত শেষ হয়।</p></div>
+      <div class="feature"><div class="ic">📊</div><h3>লাইভ প্রোগ্রেস</h3><p>গতি, সময় আর শতাংশ রিয়েল-টাইমে দেখুন — অনুমান নয়।</p></div>
+      <div class="feature"><div class="ic">🔒</div><h3>নিরাপদ ও ব্যক্তিগত</h3><p>লিংক শুধু ডাউনলোডের জন্য ব্যবহৃত হয়, কোথাও সংরক্ষণ হয় না।</p></div>
+      <div class="feature"><div class="ic">🆓</div><h3>সম্পূর্ণ ফ্রি</h3><p>কোনো সাইন-আপ নেই, কোনো সাবস্ক্রিপশন নেই, কোনো লুকানো চার্জ নেই।</p></div>
+      <div class="feature"><div class="ic">📱</div><h3>মোবাইল-ফ্রেন্ডলি</h3><p>ফোন, ট্যাব বা কম্পিউটার — যেকোনো ডিভাইসের ব্রাউজারে চলে।</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="padding-top:0">
+  <div class="container">
+    <div class="sec-head">
+      <h2>মাত্র তিন ধাপে ডাউনলোড</h2>
+      <p>কোনো অ্যাপ ইনস্টল করতে হবে না — ব্রাউজারেই সব কাজ।</p>
+    </div>
+    <div class="grid steps grid-3">
+      <div class="step"><h3>লিংক পেস্ট করুন</h3><p>যে ভিডিও বা গান নামাতে চান, তার লিংক কপি করে ওপরের বক্সে বসান।</p></div>
+      <div class="step"><h3>কোয়ালিটি বাছুন</h3><p>ভিডিও রেজোলিউশন, MP3 বিটরেট, সাবটাইটেল বা প্লেলিস্ট — যা দরকার সেটা নির্বাচন করুন।</p></div>
+      <div class="step"><h3>ডাউনলোড করুন</h3><p>ডাউনলোড বাটনে চাপ দিন। শেষ হলে ফাইল স্বয়ংক্রিয়ভাবে সেভ হবে।</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="container">
+    <div class="sec-head"><h2>যেসব প্ল্যাটফর্মে চলে</h2><p>আরও শত শত সাইট — ইঞ্জিন যেকোনো লিংক চিনে নেয়।</p></div>
+    <div class="platforms">
+      <span class="pill"><i></i> YouTube</span>
+      <span class="pill"><i></i> Facebook</span>
+      <span class="pill"><i></i> Instagram</span>
+      <span class="pill"><i></i> TikTok</span>
+      <span class="pill"><i></i> X (Twitter)</span>
+      <span class="pill"><i></i> Vimeo</span>
+      <span class="pill"><i></i> Reddit</span>
+      <span class="pill"><i></i> Dailymotion</span>
+      <span class="pill"><i></i> Pinterest</span>
+      <span class="pill"><i></i> SoundCloud</span>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="padding-top:0">
+  <div class="container" style="max-width:760px">
+    <div class="sec-head"><h2>সাধারণ প্রশ্ন</h2></div>
+    <details class="faq-item"><summary>ডাউনলোড করতে কি অ্যাপ ইনস্টল করতে হবে?</summary><p>না। এটি একটি ওয়েব টুল — যেকোনো ব্রাউজারে খুলে সরাসরি ব্যবহার করা যায়। কোনো ইনস্টল বা সাইন-আপ লাগে না।</p></details>
+    <details class="faq-item"><summary>বড় ফাইল ডাউনলোড করা যাবে?</summary><p>হ্যাঁ। ওয়েবে ফাইলের কোনো নির্দিষ্ট সাইজ সীমা নেই — ব্রাউজার সরাসরি আপনার ডিভাইসে সেভ করে।</p></details>
+    <details class="faq-item"><summary>কোয়ালিটি বা ফাইল পছন্দ না হলে কী হবে?</summary><p>চিন্তা নেই — আবার লিংক দিয়ে অন্য রেজোলিউশন বা MP3 বেছে নিতে পারেন। MP3-এর জন্য 128, 192 ও 320 kbps অপশন আছে।</p></details>
+    <details class="faq-item"><summary>প্লেলিস্ট বা পুরো চ্যানেল নামানো যায়?</summary><p>হ্যাঁ। প্লেলিস্ট লিংক দিলে টুল সেটা চিনে নেয় এবং চাইলে সব ভিডিও একসাথে ZIP ফাইলে নামিয়ে দেয়।</p></details>
+    <details class="faq-item"><summary>ব্যবহারে কোনো বিধিনিষেধ আছে?</summary><p>শুধু নিজের বা অনুমোদিত কনটেন্ট ডাউনলোড করুন এবং সংশ্লিষ্ট সাইটের শর্তাবলি মেনে চলুন। কপিরাইট সম্মান করা ব্যবহারকারীর দায়িত্ব।</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark">⬇</span>
+          <span class="brand-name">Down<span>Load</span>r</span>
+        </a>
+        <p>জনপ্রিয় সব সাইট থেকে ভিডিও ও অডিও নামানোর সহজ, দ্রুত ও ফ্রি সমাধান।</p>
+      </div>
+      <div class="foot-col">
+        <h4>দ্রুত লিংক</h4>
+        <a href="#features">ফিচার</a>
+        <a href="#how">কীভাবে কাজ করে</a>
+        <a href="#faq">সাধারণ প্রশ্ন</a>
+        <a href="#tool">ডাউনলোড শুরু করুন</a>
+      </div>
+      <div class="foot-col">
+        <h4>ব্যবহারের শর্ত</h4>
+        <a href="#faq">শুধু অনুমোদিত কনটেন্ট</a>
+        <a href="#faq">সাইটের নিয়ম মানুন</a>
+        <a href="#faq">ব্যক্তিগত ব্যবহার</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© ২০২৬ DownLoadr — সর্বস্বত্ব সংরক্ষিত।</span>
+      <span>ভালোবাসা দিয়ে তৈরি ❤</span>
+    </div>
+  </div>
+</footer>
 
 <script>
 const $ = (id) => document.getElementById(id);
-let current = null, selected = "best", bitrate = 192, jobId = null, es = null;
+let current = null;
+let selected = "best";
+let bitrate = 192;
+let jobId = null;
+let es = null;
 
 const fmtDur = (s) => {
   if (!s) return "";
-  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-  return h ? `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}` : `${m}:${String(sec).padStart(2,"0")}`;
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? `${h}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`
+           : `${m}:${String(sec).padStart(2,"0")}`;
 };
 
-$("homeBtn").addEventListener("click", (e) => {
-  e.preventDefault();
-  resetAll();
+$("homeBtn").addEventListener("click", () => {
+  if (es) { es.close(); es = null; }
+  jobId = null;
+  current = null;
+  $("url").value = "";
+  resetOutput();
+  $("details").style.display = "none";
+  $("result").classList.remove("show");
+  $("homeBtn").classList.remove("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
@@ -201,7 +472,10 @@ $("form").addEventListener("submit", async (e) => {
   $("probeBtn").disabled = true;
   $("probeBtn").textContent = "খুঁজছি…";
   try {
-    const r = await fetch("/api/probe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+    const r = await fetch("/api/probe", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
     if (!r.ok) throw new Error((await r.json()).detail || "লিংক পাওয়া যায়নি");
     current = await r.json();
     renderResult(current);
@@ -209,21 +483,13 @@ $("form").addEventListener("submit", async (e) => {
     resetOutput();
     $("details").style.display = "none";
     $("result").classList.add("show");
+    $("homeBtn").classList.add("show");
     showStatus(err.message, "err");
   } finally {
     $("probeBtn").disabled = false;
     $("probeBtn").textContent = "খুঁজুন";
   }
 });
-
-function resetAll() {
-  if (es) { es.close(); es = null; }
-  jobId = null;
-  $("url").value = "";
-  current = null;
-  resetOutput();
-  $("homeBtn").classList.remove("show");
-}
 
 function resetOutput() {
   if (es) { es.close(); es = null; }
@@ -233,7 +499,6 @@ function resetOutput() {
   $("save").classList.remove("show");
   $("cancelBtn").style.display = "none";
   $("dlBtn").disabled = false;
-  $("bar").style.width = "0%";
   $("status").textContent = "";
   $("status").className = "status";
 }
@@ -242,21 +507,27 @@ function renderResult(info) {
   $("result").classList.add("show");
   $("homeBtn").classList.add("show");
   $("details").style.display = "";
-  $("metaRow").style.display = "";
-  $("title").textContent = info.title || "media";
+  $("title").innerHTML = "";
+  $("title").appendChild(document.createTextNode(info.title || "media"));
+  if (info.is_playlist) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = `প্লেলিস্ট · ${info.entry_count} আইটেম`;
+    $("title").appendChild(b);
+  }
   const parts = [];
   if (info.uploader) parts.push(info.uploader);
   if (info.duration) parts.push("⏱ " + fmtDur(info.duration));
-  if (info.is_playlist) parts.push("প্লেলিস্ট · " + info.entry_count + " আইটেম");
   $("metaLine").textContent = parts.join("  ·  ");
   const thumb = $("thumb");
-  if (info.thumbnail) { thumb.src = info.thumbnail; thumb.style.display = ""; } else thumb.style.display = "none";
+  if (info.thumbnail) { thumb.src = info.thumbnail; thumb.style.display = ""; }
+  else thumb.style.display = "none";
 
   const chips = $("chips");
   chips.innerHTML = "";
-  const opts = (info.qualities || []).map(q => ({ value: String(q), label: q + "p" }));
-  opts.push({ value: "best", label: "⭐ সেরা" });
-  opts.push({ value: "audio", label: "🎵 MP3" });
+  const opts = (info.qualities || []).map(q => ({ value: String(q), label: `🎬 ${q}p` }));
+  opts.push({ value: "best", label: "⭐ সেরা কোয়ালিটি" });
+  opts.push({ value: "audio", label: "🎵 MP3 অডিও" });
   selected = "best";
   opts.forEach((o) => {
     const b = document.createElement("button");
@@ -277,8 +548,12 @@ function renderResult(info) {
   (info.audio_bitrates || [128, 192, 320]).forEach((v) => {
     const b = document.createElement("button");
     b.className = "chip" + (v === bitrate ? " active" : "");
-    b.textContent = v + " kbps";
-    b.onclick = () => { bitrate = v; [...brs.children].forEach(c => c.classList.remove("active")); b.classList.add("active"); };
+    b.textContent = `${v} kbps`;
+    b.onclick = () => {
+      bitrate = v;
+      [...brs.children].forEach(c => c.classList.remove("active"));
+      b.classList.add("active");
+    };
     brs.appendChild(b);
   });
 
@@ -301,7 +576,8 @@ $("dlBtn").addEventListener("click", async () => {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url: current.webpage_url || $("url").value,
-        quality: selected, audio_bitrate: bitrate,
+        quality: selected,
+        audio_bitrate: bitrate,
         subtitles: $("subs").checked,
         playlist: $("playlist").checked && current.is_playlist,
       }),
@@ -318,7 +594,8 @@ $("dlBtn").addEventListener("click", async () => {
 });
 
 $("cancelBtn").addEventListener("click", async () => {
-  if (jobId) await fetch(`/api/cancel/${jobId}`, { method: "POST" }).catch(() => {});
+  if (!jobId) return;
+  await fetch(`/api/cancel/${jobId}`, { method: "POST" }).catch(() => {});
   showStatus("বাতিলের অনুরোধ পাঠানো হয়েছে…", "");
 });
 
@@ -334,7 +611,7 @@ function trackProgress(id) {
     if (j.status === "ready") {
       es.close(); es = null;
       $("bar").style.width = "100%";
-      showStatus("✅ সম্পন্ন — ফাইল সেভ করুন", "ok");
+      showStatus("✅ ডাউনলোড সম্পন্ন — ফাইল সেভ করুন", "ok");
       const a = $("save");
       a.href = `/api/file/${id}`;
       a.setAttribute("download", j.filename || "");
@@ -353,7 +630,7 @@ function trackProgress(id) {
       $("dlBtn").disabled = false;
       $("cancelBtn").style.display = "none";
     } else {
-      const item = j.total_items ? ` (${j.item}/${j.total_items})` : "";
+      const item = j.total_items ? ` (${j.item}/${j.total_items} আইটেম)` : "";
       showStatus("⏳ ডাউনলোড হচ্ছে…" + item, "");
     }
   };
@@ -365,6 +642,28 @@ function showStatus(msg, kind) {
   s.textContent = msg;
   s.className = "status" + (kind ? " " + kind : "");
 }
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  $("installBtn").style.display = "";
+});
+$("installBtn").addEventListener("click", async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  $("installBtn").style.display = "none";
+});
+window.addEventListener("appinstalled", () => {
+  installPrompt = null;
+  $("installBtn").style.display = "none";
+});
 </script>
 </body>
 </html>
