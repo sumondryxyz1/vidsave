@@ -667,8 +667,8 @@ function showStatus(msg, kind) {
   s.className = "status" + (kind ? " " + kind : "");
 }
 
-/* বিজ্ঞাপন: AD_CONFIG.fill হলে এখানে Adsterra/অন্য নেটওয়ার্কের কোড বসান।
-   উদাহরণ: fill: '<script>...ad code...</script>'
+/* বিজ্ঞাপন: AD_CONFIG.enabled=true করে fill-এ Adsterra/অন্য নেটওয়ার্কের কোড বসান।
+   উদাহরণ (banner): fill: '<ins ...></ins>' + প্রোভাইডারের স্ক্রিপ্ট ট্যাগ
    Direct Link হলে: fill: '<a class="btn" href="আপনার-লিংক" target="_blank" rel="noopener nofollow sponsored">আরও দেখুন</a>' */
 const AD_CONFIG = { enabled: false, fill: "" };
 (function renderAd() {

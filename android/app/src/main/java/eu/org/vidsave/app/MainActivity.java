@@ -109,6 +109,9 @@ public class MainActivity extends Activity {
                                         String mimeType, long contentLength) {
                 try {
                     String name = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                    if (name.toLowerCase().endsWith(".apk")) {
+                        mimeType = "application/vnd.android.package-archive";
+                    }
                     DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
                     req.setMimeType(mimeType);
                     req.addRequestHeader("User-Agent", userAgent);
