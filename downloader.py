@@ -5,6 +5,7 @@ Shared by the Telegram bot (bot.py) and the web app (webapp.py).
 
 from __future__ import annotations
 
+import base64
 import os
 import re
 import shutil
@@ -32,12 +33,33 @@ PROXY = os.getenv("PROXY", "")
 MAX_FILESIZE_MB = int(os.getenv("MAX_FILESIZE_MB", "500"))
 
 # Cookies (optional) let yt-dlp access age/region-restricted or logged-in content.
-# Point these at a Netscape-format cookie file exported from your browser.
-COOKIE_FILES: dict[str, str] = {
-    "youtube": os.getenv("YT_COOKIES", ""),
-    "facebook": os.getenv("FB_COOKIES", ""),
-    "instagram": os.getenv("IG_COOKIES", ""),
+# Two ways to supply them per site:
+#   <SITE>_COOKIES      = path to a Netscape-format cookie file
+#   <SITE>_COOKIES_B64  = the same file, base64-encoded (handy for host dashboards)
+COOKIE_SITES: tuple[str, ...] = ("youtube", "facebook", "instagram", "twitter")
+COOKIE_DOMAINS: dict[str, tuple[str, ...]] = {
+    "youtube": ("youtube.com", "youtu.be"),
+    "facebook": ("facebook.com", "fb.watch"),
+    "instagram": ("instagram.com",),
+    "twitter": ("x.com", "twitter.com"),
 }
+
+
+def _materialize_cookie(site: str) -> str:
+    """Return a cookie-file path from a path env var or a base64 env var."""
+    raw_b64 = os.getenv(f"{site.upper()}_COOKIES_B64", "").strip()
+    if raw_b64:
+        try:
+            data = base64.b64decode(raw_b64)
+            path = Path(tempfile.gettempdir()) / f"{site}_cookies.txt"
+            path.write_bytes(data)
+            return str(path)
+        except Exception:  # noqa: BLE001 — fall back to a plain path if any
+            pass
+    return os.getenv(f"{site.upper()}_COOKIES", "")
+
+
+COOKIE_FILES: dict[str, str] = {s: _materialize_cookie(s) for s in COOKIE_SITES}
 
 # YouTube serves different results per "player client". Datacenter IPs (Render,
 # Fly, AWS) often fail the default one with "not a bot"/"No video formats", while
@@ -100,8 +122,9 @@ def _base_opts() -> dict[str, Any]:
 
 def _cookie_opts(url: str) -> dict[str, Any]:
     lowered = url.lower()
-    for key, path in COOKIE_FILES.items():
-        if path and key in lowered and Path(path).exists():
+    for site, domains in COOKIE_DOMAINS.items():
+        path = COOKIE_FILES.get(site, "")
+        if path and any(d in lowered for d in domains) and Path(path).exists():
             return {"cookiefile": path}
     return {}
 

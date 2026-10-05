@@ -85,10 +85,42 @@ Render-এর ডেটাসেন্টার IP থেকে YouTube ও X �
 সাইটের ডাউনলোড ফ্রি হোস্টে কাজ নাও করতে পারে। TikTok, Facebook, Instagram, Vimeo,
 Reddit, সরাসরি MP4 — সাধারণত কাজ করে।
 
-সমাধান (যেকোনো একটা):
-- **কুকিজ দিন** — ব্রাউজার থেকে YouTube cookies এক্সপোর্ট করে Render-এ
-  `YT_COOKIES` env var-এ ফাইলের পাথ দিন (age/region/bot-check এড়ায়)।
-- **রেসিডেন্সিয়াল প্রক্সি** — Render-এ `PROXY` env var সেট করুন
-  (`http://user:pass@host:port`)। এতে YouTube-ও কাজ করবে।
-- **নিজের হোস্টে চালান** — Oracle Cloud Free VM বা হোম সার্ভারে চালালে IP ব্লক হয় না।
+কোড এখন YouTube-এর জন্য একাধিক player client চেষ্টা করে, তবু Render-এর IP-তে
+সবই ব্লক হতে পারে। তখন **কুকিজ**ই আসল সমাধান:
+
+### কুকিজ দেওয়ার সহজ নিয়ম (base64)
+
+1. ব্রাউজারে **"Get cookies.txt LOCALLY"** এক্সটেনশন বসান (Chrome/Firefox)।
+2. `youtube.com`-এ লগইন করে এক্সটেনশন দিয়ে **Export** → `youtube.txt` নামান।
+3. ফাইলটা base64 করুন:
+   - Linux/Mac: `base64 -w0 youtube.txt > yt.b64`
+   - Windows: `certutil -encode youtube.txt yt.b64`
+   - অনলাইন: যেকোনো "base64 encode file" টুল
+4. Render → সার্ভিস → **Environment** → Add:
+   - `YOUTUBE_COOKIES_B64` = ওই base64 লেখাটা
+   - (Facebook/Instagram/X-এর জন্য `FACEBOOK_COOKIES_B64`, `INSTAGRAM_COOKIES_B64`, `TWITTER_COOKIES_B64`)
+5. **Save** → Render নিজেই আবার ডিপ্লয় করবে।
+
+> ⚠️ কুকিজ = আপনার অ্যাকাউন্টের চাবি। শুধু নিজের হোস্টে দিন; কখনো GitHub-এ কমিট করবেন না।
+> বিকল্প: `YOUTUBE_COOKIES` env var-এ ফাইলের পাথ দিন (Render-এ ফাইল আপলোড করা কষ্টের)।
+
+### প্রক্সি (বিকল্প)
+
+Render → Environment → `PROXY` = `http://user:pass@host:port` (রেসিডেন্সিয়াল প্রক্সি)।
+এতে কুকিজ ছাড়াই YouTube/X চলবে। ফ্রি নয়, কিন্তু সস্তা।
+
+## ৮. ঘুম না পড়ার সমাধান
+
+Render ফ্রি প্ল্যান **১৫ মিনিট** নিষ্ক্রিয় থাকলে ঘুমায়; প্রথম রিকোয়েস্টে ~৫০ সেকেন্ড লাগে।
+তিনটা স্তরে সামলানো যায়:
+
+1. **GitHub Actions keep-alive** (রেডি আছে) — `.github/workflows/keepalive.yml`
+   প্রতি ১০ মিনিটে `/health` ping করে। তবে GitHub-এর scheduled job কখনো দেরি করে,
+   তাই এটাই একমাত্র ভরসা নয়।
+2. **বাইরের uptime monitor** (সবচেয়ে ভরসাযোগ্য) — [UptimeRobot](https://uptimerobot.com)
+   ফ্রি অ্যাকাউন্ট → Monitor `https://vidsave-tavc.onrender.com/health`, interval **৫ মিনিট**।
+3. **Render-এর নিজের health check** — `render.yaml`-এ `healthCheckPath: /health` আছে।
+
+> সব মিলিয়ে মাসে Render-এর ফ্রি ঘণ্টা (৭৫০h) ছাড়িয়ে যেতে পারে; ঘন ping-এ সীমা শেষ হলে
+> সার্ভিস বন্ধ হতে পারে — তাই ৫-১০ মিনিটের বেশি ঘন করবেন না।
 
