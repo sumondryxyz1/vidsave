@@ -21,3 +21,6 @@ dlbot-*/
 android/build/
 android/.gradle/
 android/app/build/
+
+# Android signing key - keep private, never publish
+android/vidsave.keystore

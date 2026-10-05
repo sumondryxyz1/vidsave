@@ -1,58 +1,80 @@
-# VidSave — ফ্রি ডিপ্লয় গাইড (Render)
+# VidSave — Render ফ্রি ডিপ্লয় (ধাপে ধাপে)
 
-Render-এর ফ্রি প্ল্যানে সাইট ২৪/৭ চালানো যায়। ফ্রি ওয়েব সার্ভিস ১৫ মিনিট নিষ্ক্রিয়
-থাকলে ঘুমিয়ে পড়ে, তাই নিচের keep-alive সেটআপ করা আছে।
+Render ফ্রিতে সাইট চলে ২৪/৭, কার্ড লাগে না। ফ্রি সার্ভিস ১৫ মিনিট নিষ্ক্রিয় থাকলে
+ঘুমিয়ে পড়ে — নিচের ধাপ ৪-এ সেটার সমাধান আছে।
 
-## যা লাগবে
-- একটি GitHub অ্যাকাউন্ট (আপনার: `sumondryxyz1`)
-- একটি Render অ্যাকাউন্ট (GitHub দিয়ে সাইন-ইন) — কার্ড লাগে না
+---
 
-## ধাপ ১ — GitHub repo
-1. github.com → **New repository**
-2. নাম: `vidsave`, ভিজিবিলিটি: **Public**
-3. **Create repository**
-4. এই প্রজেক্টের কোড সেখানে পুশ করুন (নিচে কমান্ড)
+## ১. Render অ্যাকাউন্ট খুলুন
 
-```bash
-cd /workspace/project
-git remote add origin https://github.com/<your-username>/vidsave.git
-git branch -M main
-git push -u origin main
+1. যান: **https://dashboard.render.com/register**
+2. **GitHub** বাটনে ক্লিক করে সাইন-ইন করুন
+3. **Authorize Render** চাপুন
+   - "Only select repositories" → **`freetools-site`** সিলেক্ট করুন
+4. কার্ড লাগবে না ✅
+
+> ⚠️ গুরুত্বপূর্ণ: Render-কে অবশ্যই `freetools-site` repo-তে অ্যাক্সেস দিতে হবে,
+> কারণ সেখানেই এখন VidSave কোড আছে (`vidsave/` ফোল্ডারে)।
+
+---
+
+## ২. Render-এ ডিপ্লয় করুন
+
+1. Render ড্যাশবোর্ড → ডানদিকে **New +** → **Blueprint**
+2. **`freetools-site`** repo সিলেক্ট করুন → **Connect**
+3. Render `render.yaml` পড়ে নিজেই সব সেট করবে:
+   - Name: `vidsave`
+   - Root Directory: `vidsave`
+   - Plan: **Free**
+   - Health check: `/health`
+4. **Apply** বাটনে ক্লিক করুন
+5. বিল্ড চলবে ~২-৪ মিনিট → লগে `Your service is live 🎉` দেখলেই শেষ
+
+> Blueprint না চাইলে — **New + → Web Service** → `freetools-site` →
+> Language **Python 3** → Root Directory `vidsave` →
+> Build `pip install -r requirements.txt` → Start `python main.py` →
+> Instance **Free** → **Deploy**
+
+---
+
+## ৩. আপনার লিংক
+
+Render ড্যাশবোর্ডে পাবেন:
+
+```
+https://vidsave.onrender.com
 ```
 
-## ধাপ ২ — Render-এ ডিপ্লয়
-1. render.com → **New +** → **Blueprint**
-2. আপনার `vidsave` repo সিলেক্ট করুন
-3. Render `render.yaml` পড়ে নিজেই সব সেট করবে → **Apply**
-4. প্রথম বিল্ড শেষ হলে লিংক পাবেন: `https://vidsave.onrender.com`
+এটাই স্থায়ী ফ্রি লিংক — **ওয়েবসাইট আর APK দুটোই** এটা দিয়েই চলবে ✅
 
-> Blueprint না চাইলে: **New + → Web Service** → repo সিলেক্ট → Runtime: Python →
-> Build: `pip install -r requirements.txt` → Start: `python main.py`
+---
 
-## ধাপ ৩ — keep-alive (ঘুমাবে না)
-GitHub repo → **Settings → Secrets and variables → Actions → Variables → New variable**
+## ৪. keep-alive (ঘুম থামাতে)
 
-- Name: `KEEPALIVE_URL`
-- Value: `https://vidsave.onrender.com`
+1. GitHub → `freetools-site` → **Settings → Secrets and variables → Actions**
+2. **Variables** ট্যাব → **New repository variable**
+3. Name: `KEEPALIVE_URL` → Value: `https://vidsave.onrender.com` → **Add**
+4. `.github/workflows/keepalive.yml` প্রতি ১০ মিনিটে `/health` ping করবে
 
-এরপর `.github/workflows/keepalive.yml` প্রতি ১০ মিনিটে `/health` ping করবে।
-
-**বিকল্প:** [UptimeRobot](https://uptimerobot.com) (ফ্রি ৫০ মনিটর) — Monitor URL =
+**সহজ বিকল্প:** https://uptimerobot.com (ফ্রি) → Monitor URL =
 `https://vidsave.onrender.com/health`, interval ৫ মিনিট।
 
-## ফ্রি প্ল্যানে যেসব সীমা ধরে রাখা হয়েছে
+---
+
+## ৫. ফ্রি প্ল্যানে সীমা (আগেই সেট করা)
+
 | সেটিং | মান | কারণ |
 |---|---|---|
-| `MAX_CONCURRENT` | 2 | ০.১ CPU-তে একসাথে বেশি ডাউনলোড নয় |
+| `MAX_CONCURRENT` | 2 | ০.১ CPU-তে বেশি ডাউনলোড নয় |
 | `MAX_FILESIZE_MB` | 500 | ফ্রি ডিস্ক ভরে না যায় |
 | `JOB_TTL` | 1800 | ফাইল ৩০ মিনিট পর মুছে যায় |
 
-## ডাউনলোড ও মেমরি
-- ফাইল **ডিস্কে** (temp dir) নামে, মেমরিতে পুরোটা লোড হয় না
-- ডাউনলোড শেষে **stream** হয়ে ক্লায়েন্টে যায়
-- `JOB_TTL` পরে ফাইল স্বয়ংক্রিয়ভাবে মুছে যায়
-- একসাথে বেশি বড় ভিডিও/প্লেলিস্ট ফ্রিতে ধীর হতে পারে — টেস্ট করে দেখুন
+**ডাউনলোড ও মেমরি:** ফাইল ডিস্কে নামে (মেমরিতে পুরোটা নয়), শেষে stream হয়,
+তারপর স্বয়ংক্রিয়ভাবে মুছে যায়। তাই RAM নয় — সীমা হলো CPU ও ডিস্ক।
 
-## ফ্রি ডোমেইন (ঐচ্ছিক)
-`vidsave.eu.org` চাইলে eu.org-এ ফ্রি সাবডোমেইন অ্যাপ্লাই করা যায়, তারপর
-Render-এ **Settings → Custom Domains**-এ যোগ করে DNS সেট করতে হয়।
+---
+
+## ৬. নিজের ডোমেইন (ঐচ্ছিক)
+
+`vidsave.eu.org` চাইলে eu.org-এ ফ্রি সাবডোমেইন অ্যাপ্লাই করুন, তারপর Render-এ
+**Settings → Custom Domains**-এ যোগ করে DNS সেট করুন।
