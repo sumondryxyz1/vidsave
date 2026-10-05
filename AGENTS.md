@@ -53,3 +53,20 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:12000/  # 200
 
 Adsterra APK-তে শুধু Direct Link/Smartlink; ওয়েবে Popunder/Social Bar/Banner।
 বিকল্প: Monetag (APK SDK)। বিস্তারিত README-তে।
+
+## হোস্টিং (স্থায়ী ফ্রি লিংক)
+
+- `/workspace/project` = পুরো অ্যাপ (repo root-এ `render.yaml` আছে)।
+- Render Blueprint: `render.yaml` → `rootDir: vidsave` ধরে নেয়; repo root-এ পুশ করলে
+  `rootDir` সরিয়ে দিন অথবা কোড `vidsave/` ফোল্ডারে রাখুন।
+- `/health` endpoint আছে — uptime monitor ও Render health check-এর জন্য।
+- keep-alive: `.github/workflows/keepalive.yml` (repo variable `KEEPALIVE_URL`)।
+- ফ্রি-টিয়ার সীমা: `MAX_CONCURRENT=2`, `MAX_FILESIZE_MB=500`, `JOB_TTL=1800`।
+- সেশন পডের লিংক (`work-*.<...>.all-hands.dev`) **অস্থায়ী** — সেশন শেষে মরে যায়।
+
+## GitHub অ্যাক্সেস সীমা (গুরুত্বপূর্ণ)
+
+- হাতের `GITHUB_TOKEN` = `ghu_` (OpenHands AI OAuth অ্যাপ) → **read-only**, কোনো
+  repo-তে push/API-write সম্ভব নয় ("Resource not accessible by integration")।
+- নতুন repo তৈরি করাও সম্ভব নয়। কোড বদলাতে চাইলে ইউজারের নিজের PAT (`repo` scope)
+  লাগবে, অথবা ইউজার হাতে আপলোড করবেন (`/vidsave-code.zip` রেডি করা আছে)।
