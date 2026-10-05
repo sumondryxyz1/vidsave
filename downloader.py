@@ -39,6 +39,13 @@ COOKIE_FILES: dict[str, str] = {
     "instagram": os.getenv("IG_COOKIES", ""),
 }
 
+# YouTube serves different results per "player client". Datacenter IPs (Render,
+# Fly, AWS) often fail the default one with "not a bot"/"No video formats", while
+# another client still works — so try each in turn before giving up.
+PLAYER_CLIENTS: tuple[str, ...] = tuple(
+    c.strip() for c in os.getenv("YT_PLAYER_CLIENTS", "default,android_vr,tv,web_safari").split(",") if c.strip()
+)
+
 QUALITY_PRESETS = (2160, 1440, 1080, 720, 480, 360, 240)
 AUDIO_BITRATES = (128, 192, 320)
 
@@ -99,10 +106,31 @@ def _cookie_opts(url: str) -> dict[str, Any]:
     return {}
 
 
+def _is_youtube(url: str) -> bool:
+    lowered = url.lower()
+    return "youtube.com" in lowered or "youtu.be" in lowered
+
+
+def _attempts(url: str) -> list[dict[str, Any]]:
+    """Extra yt-dlp options to try in order; YouTube gets one per player client."""
+    if not _is_youtube(url):
+        return [{}]
+    return [{"extractor_args": {"youtube": {"player_client": [c]}}} for c in PLAYER_CLIENTS]
+
+
 def probe(url: str) -> MediaInfo:
     """Fetch metadata without downloading. Detects playlists and lists entries."""
-    with YoutubeDL({**_base_opts(), **_cookie_opts(url)}) as ydl:
-        info = ydl.extract_info(url, download=False)
+    info = None
+    last: Exception | None = None
+    for extra in _attempts(url):
+        try:
+            with YoutubeDL({**_base_opts(), **_cookie_opts(url), **extra}) as ydl:
+                info = ydl.extract_info(url, download=False)
+            break
+        except Exception as exc:  # noqa: BLE001 — try the next client
+            last = exc
+    if info is None:
+        raise last if last else RuntimeError("probe failed")
 
     if info.get("_type") == "playlist":
         entries = []
@@ -233,11 +261,20 @@ def download(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     opts = _build_opts(out_dir, url, height, audio_only, audio_bitrate, subtitles, False, progress_hook)
-    with YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        if info.get("_type") == "playlist":
-            info = (info.get("entries") or [{}])[0]
-        path = _final_path(ydl, info, out_dir, audio_only)
+    path: Path | None = None
+    last: Exception | None = None
+    for extra in _attempts(url):
+        try:
+            with YoutubeDL({**opts, **extra}) as ydl:
+                info = ydl.extract_info(url, download=True)
+                if info.get("_type") == "playlist":
+                    info = (info.get("entries") or [{}])[0]
+                path = _final_path(ydl, info, out_dir, audio_only)
+            break
+        except Exception as exc:  # noqa: BLE001 — try the next client
+            last = exc
+    if path is None:
+        raise last if last else RuntimeError("download failed")
     if not path.exists():
         raise FileNotFoundError("Download finished but no output file was found.")
     return path
@@ -256,8 +293,18 @@ def download_playlist(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     opts = _build_opts(out_dir, url, height, audio_only, audio_bitrate, subtitles, True, progress_hook)
-    with YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
+    done = False
+    last: Exception | None = None
+    for extra in _attempts(url):
+        try:
+            with YoutubeDL({**opts, **extra}) as ydl:
+                ydl.extract_info(url, download=True)
+            done = True
+            break
+        except Exception as exc:  # noqa: BLE001 — try the next client
+            last = exc
+    if not done and last is not None:
+        raise last
 
     ext = ".mp3" if audio_only else None
     files = [p for p in sorted(out_dir.iterdir()) if p.is_file()]
