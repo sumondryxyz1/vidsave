@@ -69,7 +69,7 @@ python bot.py
 
 রিপোতে `render.yaml` আর `Dockerfile` আছে। Render-এ "New → Blueprint" দিয়ে রিপো
 কানেক্ট করলেই বিল্ড-অ্যান্ড-ডিপ্লয় হয়ে যাবে। ফ্রি প্ল্যানে URL হবে
-`https://vidsave.onrender.com` জাতীয়।
+`https://vidsave-tavc.onrender.com` জাতীয়।
 
 ## কাস্টম ডোমেইন (eu.org)
 

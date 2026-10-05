@@ -42,7 +42,7 @@ Render ফ্রিতে সাইট চলে ২৪/৭, কার্ড ল
 Render ড্যাশবোর্ডে পাবেন:
 
 ```
-https://vidsave.onrender.com
+https://vidsave-tavc.onrender.com
 ```
 
 এটাই স্থায়ী ফ্রি লিংক — **ওয়েবসাইট আর APK দুটোই** এটা দিয়েই চলবে ✅
@@ -53,11 +53,11 @@ https://vidsave.onrender.com
 
 1. GitHub → `freetools-site` → **Settings → Secrets and variables → Actions**
 2. **Variables** ট্যাব → **New repository variable**
-3. Name: `KEEPALIVE_URL` → Value: `https://vidsave.onrender.com` → **Add**
+3. Name: `KEEPALIVE_URL` → Value: `https://vidsave-tavc.onrender.com` → **Add**
 4. `.github/workflows/keepalive.yml` প্রতি ১০ মিনিটে `/health` ping করবে
 
 **সহজ বিকল্প:** https://uptimerobot.com (ফ্রি) → Monitor URL =
-`https://vidsave.onrender.com/health`, interval ৫ মিনিট।
+`https://vidsave-tavc.onrender.com/health`, interval ৫ মিনিট।
 
 ---
 
