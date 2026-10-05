@@ -189,7 +189,12 @@ async def probe(req: ProbeRequest) -> dict[str, Any]:
     try:
         info = await asyncio.wait_for(asyncio.to_thread(downloader.probe, url), timeout=120)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(422, f"লিংক থেকে তথ্য বের করা যায়নি: {type(exc).__name__}")
+        detail = str(exc)
+        unsupported = ("Unsupported URL" in detail or "[generic]" in detail
+                       or "Unable to download webpage" in detail or "No video formats" in detail)
+        if unsupported:
+            raise HTTPException(422, "এই সাইটটি সাপোর্টেড নয়। YouTube, Facebook, Instagram, TikTok, X, Vimeo সহ জনপ্রিয় সাইটের লিংক দিন।")
+        raise HTTPException(422, "লিংক থেকে তথ্য বের করা যায়নি। লিংকটি সঠিক কিনা দেখুন।")
 
     heights = downloader.available_heights(info)
     picks = sorted({h for h in downloader.QUALITY_PRESETS if h in heights}, reverse=True)[:5]
