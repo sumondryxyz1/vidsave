@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">VidSave</string>
-    <string name="home_url">https://vidsave.eu.org</string>
-    <string name="fallback_url">https://work-1-qtqsvueaglwcmkhp.prod-runtime.all-hands.dev/</string>
+    <string name="home_url">https://work-1-qtqsvueaglwcmkhp.prod-runtime.all-hands.dev/</string>
+    <string name="fallback_url">https://vidsave.eu.org</string>
     <string name="offline">সাইটে সংযোগ করা যাচ্ছে না</string>
     <string name="retry">আবার চেষ্টা করুন</string>
     <string name="open_browser">ব্রাউজারে খুলুন</string>
-    <string name="error_hint">ইন্টারনেট আছে কিনা দেখুন। ডোমেইন (vidsave.eu.org) এখনো চালু না হলে বিকল্প ঠিকানায় চেষ্টা হবে।</string>
+    <string name="error_hint">ইন্টারনেট আছে কিনা দেখুন। না থাকলে Wi-Fi বা মোবাইল ডেটা চালু করুন।</string>
 </resources>
