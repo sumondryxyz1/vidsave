@@ -56,13 +56,23 @@ Adsterra APK-তে শুধু Direct Link/Smartlink; ওয়েবে Popun
 
 ## হোস্টিং (স্থায়ী ফ্রি লিংক)
 
+- **লাইভ:** https://vidsave-tavc.onrender.com (Render Blueprint `exs-db1sbl9srm7s73d2obgg`,
+  service `srv-db1scjrncjis73c5m0d0`, ফ্রি প্ল্যান, repo root deploy)।
 - `/workspace/project` = পুরো অ্যাপ (repo root-এ `render.yaml` আছে)।
-- Render Blueprint: `render.yaml` → `rootDir: vidsave` ধরে নেয়; repo root-এ পুশ করলে
-  `rootDir` সরিয়ে দিন অথবা কোড `vidsave/` ফোল্ডারে রাখুন।
 - `/health` endpoint আছে — uptime monitor ও Render health check-এর জন্য।
-- keep-alive: `.github/workflows/keepalive.yml` (repo variable `KEEPALIVE_URL`)।
+- keep-alive: `.github/workflows/keepalive.yml` — ডিফল্টে `vidsave-tavc.onrender.com`
+  ping করে; `KEEPALIVE_URL` repo variable দিয়ে বদলানো যায়। ফ্রি প্ল্যান ১৫ মিনিট
+  নিষ্ক্রিয় থাকলে ঘুমায়।
 - ফ্রি-টিয়ার সীমা: `MAX_CONCURRENT=2`, `MAX_FILESIZE_MB=500`, `JOB_TTL=1800`।
+- APK `home_url` = Render লিংক, `fallback_url` = সেশন পড (অস্থায়ী)।
 - সেশন পডের লিংক (`work-*.<...>.all-hands.dev`) **অস্থায়ী** — সেশন শেষে মরে যায়।
+
+## ডেটাসেন্টার IP সীমা (Render)
+
+- Render-এর IP থেকে YouTube ও X **"not a bot"/login** চেক দেয় → probe 422 দেয়।
+  TikTok, Facebook, Instagram, Vimeo, সরাসরি MP4 কাজ করে (যাচাই করা)।
+- সমাধান: `YT_COOKIES`/`FB_COOKIES`/`IG_COOKIES` (Netscape cookie ফাইল) বা
+  `PROXY` env var — কোডে আগে থেকেই সাপোর্ট আছে (`downloader.py`)।
 
 ## GitHub অ্যাক্সেস সীমা (গুরুত্বপূর্ণ)
 
