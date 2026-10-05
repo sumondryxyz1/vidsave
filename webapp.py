@@ -296,6 +296,15 @@ async def service_worker() -> FileResponse:
     return FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
 
 
+@app.get("/VidSave.apk", include_in_schema=False)
+async def apk() -> FileResponse:
+    return FileResponse(
+        STATIC_DIR / "VidSave.apk",
+        media_type="application/vnd.android.package-archive",
+        filename="VidSave.apk",
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 

@@ -47,6 +47,22 @@ export BOT_TOKEN="123456:ABC-তোমার-টোকেন"   # BotFather থ�
 python bot.py
 ```
 
+## Android অ্যাপ (APK)
+
+নেটিভ অ্যাপের সোর্স `android/` ফোল্ডারে (WebView মোড়ক)। বিল্ড করা APK:
+`static/VidSave.apk` — সাইটে `/VidSave.apk` লিংকে ডাউনলোড হয় (নেভবার ও ফুটারে
+"📱 APK" বাটন)। বিল্ড নির্দেশনা: `android/README.md`।
+
+## ইনকাম / বিজ্ঞাপন
+
+`static/index.html`-এ `AD_CONFIG` নামে একটা স্লট আছে (হিরো সেকশনে "#adTop")।
+`enabled: true` করে `fill`-এ অ্যাড নেটওয়ার্কের কোড বসালেই ওয়েব ও APK দুই জায়গায়
+বিজ্ঞাপন দেখা যাবে (APK সাইটটাই লোড করে)।
+
+- Adsterra: APK-এর জন্য শুধু **Direct Link / Smartlink** (ক্লিক-ভিত্তিক)
+- ওয়েবে: Popunder, Social Bar, Banner
+- বিকল্প: Monetag (APK SDK আছে), PropellerAds
+
 ## ডিপ্লয় (Render)
 
 রিপোতে `render.yaml` আর `Dockerfile` আছে। Render-এ "New → Blueprint" দিয়ে রিপো

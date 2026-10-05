@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">VidSave</string>
+    <string name="home_url">https://vidsave.eu.org</string>
+    <string name="offline">ইন্টারনেট সংযোগ নেই। লিংক আছে কিনা দেখুন।</string>
+</resources>

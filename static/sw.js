@@ -1,4 +1,4 @@
-const CACHE = "vidsave-v2";
+const CACHE = "vidsave-v3";
 const SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (e) => {

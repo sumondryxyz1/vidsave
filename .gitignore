@@ -16,3 +16,8 @@ venv/
 downloads/
 dlbot-*/
 *.part
+
+# Android build artifacts
+android/build/
+android/.gradle/
+android/app/build/
