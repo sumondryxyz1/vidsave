@@ -28,6 +28,9 @@ URL_RE = re.compile(r"https?://[^\s<>\"']+")
 # Optional proxy for geo-blocked content or datacenter-IP 403s.
 PROXY = os.getenv("PROXY", "")
 
+# Cap a single download so a free host's disk does not fill up (0 = unlimited).
+MAX_FILESIZE_MB = int(os.getenv("MAX_FILESIZE_MB", "500"))
+
 # Cookies (optional) let yt-dlp access age/region-restricted or logged-in content.
 # Point these at a Netscape-format cookie file exported from your browser.
 COOKIE_FILES: dict[str, str] = {
@@ -199,6 +202,9 @@ def _build_opts(
 
     if progress_hook:
         opts["progress_hooks"] = [progress_hook]
+
+    if MAX_FILESIZE_MB > 0:
+        opts["max_filesize"] = MAX_FILESIZE_MB * 1024 * 1024
 
     return opts
 
